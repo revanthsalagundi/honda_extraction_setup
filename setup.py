@@ -1,45 +1,55 @@
 import os
 import subprocess
 
-def install_system_dependencies():
-    print("Updating system packages...")
-    subprocess.run(["sudo", "apt-get", "update"], check=True)
-    
-    print("Installing essential system dependencies...")
+
+def install_packages():
+    # List of required system packages
     packages = [
         "curl",
         "libopencv-dev",  # OpenCV C++ development package
         "build-essential",
         "cmake",  # Required for compiling C++ projects
         "python3-pip",
-        "python3-venv"
+        "python3-venv",
     ]
-    subprocess.run(["sudo", "apt-get", "install", "-y"] + packages, check=True)
 
-def install_python_libraries():
-    print("Installing Python libraries...")
-    python_packages = [
-        "python-telegram-bot",
-        "tqdm",
-        "pandas",
-        "opencv-python"
-    ]
-    subprocess.run(["pip3", "install"] + python_packages, check=True)
+    # Update and install packages
+    print("Updating package list and installing required system packages...")
+    os.system("sudo apt-get update -y")
+    os.system(f"sudo apt-get install -y {' '.join(packages)}")
+
+    print("System packages installed successfully.")
+
+
+def install_python_dependencies():
+    required_python_packages = ["pandas", "tqdm", "python-telegram-bot"]
+
+    print("Installing required Python packages...")
+    subprocess.check_call(
+        [os.sys.executable, "-m", "pip", "install"] + required_python_packages
+    )
+    print("Python packages installed successfully.")
+
 
 def setup_azcopy():
-    print("Setting up AzCopy...")
-    azcopy_url = "https://aka.ms/downloadazcopy-v10-linux"
-    subprocess.run(["curl", "-L", azcopy_url, "-o", "azcopy.tar.gz"], check=True)
-    subprocess.run(["tar", "-xf", "azcopy.tar.gz"], check=True)
-    subprocess.run(["sudo", "mv", "azcopy_linux_amd64_*/azcopy", "/usr/local/bin/"], check=True)
-    subprocess.run(["rm", "-rf", "azcopy_linux_amd64_*", "azcopy.tar.gz"], check=True)
-    print("AzCopy setup complete.")
+    print("Downloading and installing AzCopy...")
+    try:
+        os.system("wget https://aka.ms/downloadazcopy-v10-linux")
+        os.system("tar -xvf downloadazcopy-v10-linux")
+        os.system("sudo rm -f /usr/bin/azcopy")
+        os.system("sudo cp ./azcopy_linux_amd64_*/azcopy /usr/bin/")
+        os.system("sudo chmod 755 /usr/bin/azcopy")
 
-def main():
-    install_system_dependencies()
-    install_python_libraries()
-    setup_azcopy()
-    print("Setup completed successfully.")
+        # Clean up
+        os.system("rm -f downloadazcopy-v10-linux")
+        os.system("rm -rf ./azcopy_linux_amd64_*/")
+
+        print("AzCopy installed successfully.")
+    except Exception as e:
+        print(f"Error during AzCopy setup: {e}")
+
 
 if __name__ == "__main__":
-    main()
+    install_packages()
+    install_python_dependencies()
+    setup_azcopy()
